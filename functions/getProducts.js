@@ -1,18 +1,11 @@
 const puppeteer = require('puppeteer');
 
 module.exports = async function getProducts(url) {
-  const browser = await puppeteer.launch();
+  try {
+  const browser = await puppeteer.launch({timeout: 0, args: ['--no-sandbox']});
   const page = await browser.newPage();
 
-  await page.goto(url, {
-    waitUntil: 'networkidle2'
-  });
-
-  await page.waitForSelector('h1.vtex-search-result-3-x-galleryTitle--layout.t-heading-1', {
-    visible: true
-  });
-
-  await new Promise(resolve => setTimeout(resolve, 5000));
+  await page.goto(url);
 
   const items = await page.$$('article.vtex-product-summary-2-x-element.pointer.pt3.pb4.flex.flex-column.h-100');
   const products = await Promise.all(items.map(async item => {
@@ -27,4 +20,11 @@ module.exports = async function getProducts(url) {
   await browser.close();
 
   return products;
+  } catch (error) {
+    console.log(error);
+    return ({
+      error: true,
+      message: 'Hubo un error al traer los datos'
+    })
+  }
 }
